@@ -2,41 +2,40 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Tỏ Tình Gửi Google Sheets</title>
+  <title>Jin Yêu ơi</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       background: #000010;
-      overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
       color: white;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 30px;
     }
 
     #popup-container {
       background: #222;
       padding: 20px;
       border-radius: 10px;
-      width: 320px;
+      width: 90%;
+      max-width: 500px;
       box-shadow: 0 0 15px #d6336c;
       text-align: center;
-      z-index: 3000;
-      position: relative;
     }
 
     input[type="text"] {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       font-size: 1em;
       border-radius: 5px;
       border: 1px solid #d6336c;
       margin-bottom: 15px;
       box-sizing: border-box;
-      color: black;
     }
 
     button {
@@ -44,15 +43,32 @@
       border: none;
       padding: 10px 20px;
       color: white;
-      font-weight: 600;
+      font-weight: bold;
       font-size: 1em;
       border-radius: 5px;
       cursor: pointer;
-      box-shadow: 0 0 10px #d6336c;
     }
 
-    button:hover {
-      background: #a02246;
+    #answers-display {
+      margin-top: 40px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .answer-item {
+      margin-bottom: 20px;
+      background: #333;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px #555;
+    }
+
+    .answer-item strong {
+      color: #00ffff;
+    }
+
+    audio {
+      display: none;
     }
   </style>
 </head>
@@ -63,6 +79,8 @@
     <input type="text" id="answer" autocomplete="off" />
     <button id="next-btn">Kế tiếp</button>
   </div>
+
+  <div id="answers-display"></div>
 
   <audio id="background-music" src="https://loadedmedia.store/uploads/music/2025/05/LBI-Jumping-Machine.mp3" autoplay loop muted></audio>
 
@@ -85,6 +103,7 @@
     const questionEl = document.getElementById("question");
     const answerEl = document.getElementById("answer");
     const nextBtn = document.getElementById("next-btn");
+    const answersDisplay = document.getElementById("answers-display");
     const music = document.getElementById("background-music");
 
     function showQuestion(index) {
@@ -93,38 +112,42 @@
       answerEl.focus();
     }
 
+    function showAllAnswers() {
+      answersDisplay.innerHTML = "<h2>Câu trả lời của anh ❤️</h2>";
+      answers.forEach((ans, i) => {
+        const div = document.createElement("div");
+        div.className = "answer-item";
+        div.innerHTML = `<strong>${questions[i]}</strong><br>${ans}`;
+        answersDisplay.appendChild(div);
+      });
+    }
+
     nextBtn.addEventListener("click", () => {
-      const answer = answerEl.value.trim();
-      if (answer !== "") {
-        answers.push(`${questions[currentQuestion]} - ${answer}`);
+      const val = answerEl.value.trim();
+      if (val !== "") {
+        answers.push(val);
         currentQuestion++;
         if (currentQuestion < questions.length) {
           showQuestion(currentQuestion);
         } else {
-          sendToGoogleSheet(answers);
-          document.getElementById("popup-container").innerHTML = "<h2>Cảm ơn anh đã trả lời ❤️</h2>";
+          document.getElementById("popup-container").style.display = "none";
+          showAllAnswers();
         }
       }
     });
 
-    function sendToGoogleSheet(answers) {
-      const data = new FormData();
-      data.append("answers", answers.join("\\n"));
-
-      fetch("YOUR_GOOGLE_SCRIPT_URL", {
-        method: "POST",
-        body: data,
-      })
-      .then(res => console.log("Gửi thành công!"))
-      .catch(err => console.error("Lỗi gửi:", err));
-    }
-
-    showQuestion(currentQuestion);
+    answerEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        nextBtn.click();
+      }
+    });
 
     window.addEventListener("DOMContentLoaded", () => {
       music.muted = false;
       music.play().catch(() => {});
     });
+
+    showQuestion(currentQuestion);
   </script>
 </body>
 </html>
