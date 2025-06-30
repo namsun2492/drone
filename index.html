@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tỏ Tình Gửi Google Sheets</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000010;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #popup-container {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      width: 320px;
+      box-shadow: 0 0 15px #d6336c;
+      text-align: center;
+      z-index: 3000;
+      position: relative;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #d6336c;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+      color: black;
+    }
+
+    button {
+      background: #d6336c;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-weight: 600;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #d6336c;
+    }
+
+    button:hover {
+      background: #a02246;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="popup-container">
+    <div id="question"></div>
+    <input type="text" id="answer" autocomplete="off" />
+    <button id="next-btn">Kế tiếp</button>
+  </div>
+
+  <audio id="background-music" src="https://loadedmedia.store/uploads/music/2025/05/LBI-Jumping-Machine.mp3" autoplay loop muted></audio>
+
+  <script>
+    const questions = [
+      "Người mà anh yêu thương nhất là ai?",
+      "Hiện tại anh có đang nhớ em không?",
+      "Điều gì làm cho em đặc biệt trong lòng anh?",
+      "Anh có thấy không an toàn khi ở bên em không?",
+      "Điều gì em có thể làm để anh cảm thấy được yêu thương nhiều hơn?",
+      "Anh có muốn em thay đổi điều gì không?",
+      "Điều gì anh cảm nhận từ tình yêu của em mà trước đây anh chưa từng nhận được?",
+      "Khoảnh khắc nào khiến anh thấy em chính là người phù hợp mà anh đang tìm kiếm?",
+      "Phần nào trong cuộc sống của anh đã thay đổi từ khi gặp em?"
+    ];
+
+    const answers = [];
+    let currentQuestion = 0;
+
+    const questionEl = document.getElementById("question");
+    const answerEl = document.getElementById("answer");
+    const nextBtn = document.getElementById("next-btn");
+    const music = document.getElementById("background-music");
+
+    function showQuestion(index) {
+      questionEl.textContent = questions[index];
+      answerEl.value = "";
+      answerEl.focus();
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const answer = answerEl.value.trim();
+      if (answer !== "") {
+        answers.push(`${questions[currentQuestion]} - ${answer}`);
+        currentQuestion++;
+        if (currentQuestion < questions.length) {
+          showQuestion(currentQuestion);
+        } else {
+          sendToGoogleSheet(answers);
+          document.getElementById("popup-container").innerHTML = "<h2>Cảm ơn anh đã trả lời ❤️</h2>";
+        }
+      }
+    });
+
+    function sendToGoogleSheet(answers) {
+      const data = new FormData();
+      data.append("answers", answers.join("\\n"));
+
+      fetch("YOUR_GOOGLE_SCRIPT_URL", {
+        method: "POST",
+        body: data,
+      })
+      .then(res => console.log("Gửi thành công!"))
+      .catch(err => console.error("Lỗi gửi:", err));
+    }
+
+    showQuestion(currentQuestion);
+
+    window.addEventListener("DOMContentLoaded", () => {
+      music.muted = false;
+      music.play().catch(() => {});
+    });
+  </script>
+</body>
+</html>
