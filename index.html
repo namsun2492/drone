@@ -2,312 +2,173 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Tỏ Tình Hiệu Ứng Đẹp</title>
+  <title>Drone Show - Anh yêu em 💖</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background: #000010;
       overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      background: black;
     }
-
-    #popup-container {
-      background: #222;
-      padding: 20px;
-      border-radius: 10px;
-      width: 320px;
-      box-shadow: 0 0 15px #d6336c;
-      text-align: center;
-      z-index: 3000;
-      position: relative;
-      animation: floatUpDown 2s ease-in-out infinite alternate, blink 1.2s infinite;
-    }
-
-    @keyframes floatUpDown {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-15px); }
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      font-size: 1em;
-      border-radius: 5px;
-      border: 1px solid #d6336c;
-      margin-bottom: 15px;
-      box-sizing: border-box;
-      color: black;
-    }
-
-    button {
-      background: #d6336c;
-      border: none;
-      padding: 10px 20px;
-      color: white;
-      font-weight: 600;
-      font-size: 1em;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 0 10px #d6336c;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background: #a02246;
-    }
-
     canvas {
+      display: block;
+    }
+    #footer {
       position: fixed;
-      top: 0;
-      left: 0;
+      right: 10px;
+      bottom: 8px;
+      font-family: "Courier New", monospace;
+      font-size: 8px;
+      color: #00ffee;
+      text-shadow:
+        0 0 1px #00ffee,
+        0 0 3px #00ffee,
+        0 0 5px #00ffff,
+        0 0 8px #00ffff;
       pointer-events: none;
-      z-index: 1000;
+      user-select: none;
     }
   </style>
 </head>
 <body>
+<canvas id="canvas"></canvas>
+<div id="footer">Nam Sun ♥ Ngọc Thuận</div>
 
-  <div id="popup-container">
-    <div id="question"></div>
-    <input type="text" id="answer" autocomplete="off" />
-    <button id="next-btn">Kế tiếp</button>
-  </div>
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-  <canvas id="heart-canvas"></canvas>
+let drones = [];
+let frames = 0;
 
-  <!-- Nhạc nền tự chạy -->
-  <audio id="background-music" src="https://loadedmedia.store/uploads/music/2025/05/LBI-Jumping-Machine.mp3" autoplay loop></audio>
+class Drone {
+  constructor(x, y, color = "#ff6699") {
+    this.x = Math.random() * canvas.width;
+    this.y = canvas.height + Math.random() * 300;
+    this.tx = x;
+    this.ty = y;
+    this.color = color;
+    this.size = 2 + Math.random();
+    this.speed = 0.07 + Math.random() * 0.03;
+  }
 
-  <script>
-    const questions = [
-      "Người mà anh yêu thương nhất là ai?",
-      "Hiện tại anh có đang nhớ em không?",
-      "Điều gì làm cho em đặc biệt trong lòng anh?",
-      "Anh có thấy không an toàn khi ở bên em không?",
-      "Điều gì em có thể làm để anh cảm thấy được yêu thương nhiều hơn?",
-      "Anh có muốn em thay đổi điều gì không?",
-      "Điều gì anh cảm nhận từ tình yêu của em mà trước đây anh chưa từng nhận được?",
-      "Khoảnh khắc nào khiến anh thấy em chính là người phù hợp mà anh đang tìm kiếm?",
-      "Phần nào trong cuộc sống của anh đã thay đổi từ khi gặp em?"
-    ];
+  update() {
+    this.x += (this.tx - this.x) * this.speed;
+    this.y += (this.ty - this.y) * this.speed;
+  }
 
-    const loveMessages = [
-      "Em yêu anh",
-      "Em rất yêu anh",
-      "Vậy còn những lời hứa khi xưa thì sao?",
-      "Anh biết em yêu anh mà đúng không?",
-      "Chúng mình sẽ yêu nhau mãi nhé ❤️",
-      "Em nhớ anh mỗi ngày!",
-      "Anh là tất cả của em!",
-      "Không ai có thể thay thế anh được!",
-      "Em luôn chờ đợi anh!",
-      "Anh và em, mãi bên nhau!",
-      "<span style='font-size:22px; font-weight:bold;'>Jin ơi em rất yêu anh</span>",
-      "Xin anh đừng bao giờ từ bỏ em",
-      "Từ khi gặp anh, thế giới của em trở nên tươi đẹp hơn",
-      "Chỉ cần có anh, mọi buồn đau đều tan biến",
-      "Anh là ánh sáng trong cuộc đời em",
-      "Em mong mỗi ngày đều được ở bên anh",
-      "Những khoảnh khắc bên anh là điều quý giá nhất",
-      "Em yêu cách anh cười, cách anh nhìn em",
-      "Dù thế giới đổi thay, tình cảm em dành cho anh vẫn vậy",
-      "Không ngày nào em không nghĩ về anh"
-    ];
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+}
 
-    let currentQuestion = 0;
+function getTextPositions(text, fontSize = 80) {
+  const offCanvas = document.createElement("canvas");
+  const offCtx = offCanvas.getContext("2d");
+  offCanvas.width = canvas.width;
+  offCanvas.height = canvas.height;
+  offCtx.fillStyle = "#ff6699";
+  offCtx.font = `bold ${fontSize}px Arial`;
+  offCtx.textAlign = "center";
+  offCtx.fillText(text, canvas.width / 2, canvas.height / 2);
+  const imageData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
+  const positions = [];
 
-    const questionEl = document.getElementById("question");
-    const answerEl = document.getElementById("answer");
-    const nextBtn = document.getElementById("next-btn");
-    const popupContainer = document.getElementById("popup-container");
-    const music = document.getElementById("background-music");
-
-    function showQuestion(index) {
-      questionEl.textContent = questions[index];
-      answerEl.value = "";
-      answerEl.focus();
+  for (let y = 0; y < canvas.height; y += 6) {
+    for (let x = 0; x < canvas.width; x += 6) {
+      const index = (y * canvas.width + x) * 4;
+      if (imageData.data[index + 3] > 128) {
+        positions.push({ x, y });
+      }
     }
+  }
+  return positions;
+}
 
-    answerEl.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") nextBtn.click();
+function initDronesForText() {
+  const positions = getTextPositions("Anh yêu em");
+  drones = positions.map(p => new Drone(p.x, p.y));
+}
+
+function animateTextPhase() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drones.forEach(d => {
+    d.update();
+    d.draw();
+  });
+
+  frames++;
+  if (frames < 150) {
+    requestAnimationFrame(animateTextPhase);
+  } else {
+    startHeartEffect();
+  }
+}
+
+function startHeartEffect() {
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const particles = [];
+
+  function heartFunction(t, scale = 15) {
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+    return {
+      x: cx + x * scale,
+      y: cy + y * scale
+    };
+  }
+
+  for (let i = 0; i < 1500; i++) {
+    const t = Math.random() * 2 * Math.PI;
+    const p = heartFunction(t, 11 + Math.random() * 2);
+    particles.push({
+      x: p.x,
+      y: p.y,
+      dx: (Math.random() - 0.5) * 0.7,
+      dy: (Math.random() - 0.5) * 0.7,
+      alpha: Math.random() * 0.8 + 0.2,
+      size: Math.random() * 1.5 + 1
     });
+  }
 
-    nextBtn.addEventListener("click", () => {
-      alert("Anh yêu em");
-      currentQuestion++;
-      if (currentQuestion < questions.length) {
-        showQuestion(currentQuestion);
-      } else {
-        popupContainer.style.display = "none";
-        startStarfallAndPopups();
-      }
-    });
+  function drawHeartParticles() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    showQuestion(currentQuestion);
+    for (let p of particles) {
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(255, 100, 150, ${p.alpha})`;
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      p.x += p.dx;
+      p.y += p.dy;
+      p.alpha -= 0.003;
 
-    const canvas = document.getElementById("heart-canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let stars = [], hearts = [], snowflakes = [], particles = [];
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-
-    class Star {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height - canvas.height;
-        this.size = Math.random() * 2 + 1;
-        this.speedY = Math.random() * 2 + 1;
-        this.opacity = Math.random() * 0.5 + 0.5;
-      }
-      update() {
-        this.y += this.speedY;
-        if (this.y > canvas.height) {
-          this.y = -10;
-          this.x = Math.random() * canvas.width;
-        }
-      }
-      draw() {
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+      if (p.alpha <= 0) {
+        const t = Math.random() * 2 * Math.PI;
+        const newP = heartFunction(t, 11 + Math.random() * 2);
+        p.x = newP.x;
+        p.y = newP.y;
+        p.alpha = Math.random() * 0.8 + 0.2;
+        p.size = Math.random() * 1.5 + 1;
+        p.dx = (Math.random() - 0.5) * 0.7;
+        p.dy = (Math.random() - 0.5) * 0.7;
       }
     }
 
-    class Heart {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 6 + 4;
-        this.alpha = Math.random() * 0.5 + 0.5;
-        this.speedY = Math.random() * 0.3 + 0.2;
-        this.offset = Math.random() * 100;
-      }
-      update() {
-        this.y -= this.speedY;
-        if (this.y < -10) {
-          this.y = canvas.height + 10;
-          this.x = Math.random() * canvas.width;
-        }
-      }
-      draw() {
-        ctx.globalAlpha = this.alpha * (0.7 + 0.3 * Math.sin(Date.now() / 300 + this.offset));
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.bezierCurveTo(this.x - this.size / 2, this.y - this.size / 2,
-                          this.x - this.size, this.y + this.size / 2,
-                          this.x, this.y + this.size);
-        ctx.bezierCurveTo(this.x + this.size, this.y + this.size / 2,
-                          this.x + this.size / 2, this.y - this.size / 2,
-                          this.x, this.y);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    }
+    requestAnimationFrame(drawHeartParticles);
+  }
 
-    class Particle {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.size = Math.random() * 4 + 2;
-        this.alpha = 1;
-        this.angle = Math.random() * 2 * Math.PI;
-        this.speed = Math.random() * 2 + 0.5;
-      }
-      update() {
-        this.x += this.speed * Math.cos(this.angle);
-        this.y += this.speed * Math.sin(this.angle);
-        this.alpha -= 0.01;
-      }
-      draw() {
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = "#00bfff";
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    }
+  drawHeartParticles();
+}
 
-    function drawScene() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      stars.forEach(s => { s.update(); s.draw(); });
-      hearts.forEach(h => { h.update(); h.draw(); });
-      particles.forEach(p => { p.update(); p.draw(); });
-      particles = particles.filter(p => p.alpha > 0);
-    }
-
-    document.addEventListener("mousemove", e => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      for (let i = 0; i < 5; i++) {
-        particles.push(new Particle(mouseX, mouseY));
-      }
-    });
-
-    function createStars(n) { for (let i = 0; i < n; i++) stars.push(new Star()); }
-    function createHearts(n) { for (let i = 0; i < n; i++) hearts.push(new Heart()); }
-
-    function createLovePopup(message) {
-      const popup = document.createElement("div");
-      popup.style.position = "fixed";
-      popup.style.top = `${Math.random() * (window.innerHeight - 150) + 50}px`;
-      popup.style.left = `${Math.random() * (window.innerWidth - 250) + 50}px`;
-      popup.style.padding = "10px 15px";
-      popup.style.background = "rgba(214, 51, 108, 0.9)";
-      popup.style.color = "white";
-      popup.style.fontSize = "16px";
-      popup.style.borderRadius = "10px";
-      popup.style.boxShadow = "0 0 10px #d6336c";
-      popup.style.zIndex = 2000;
-      popup.style.animation = "floatUpDown 2s ease-in-out infinite alternate, blink 1.2s infinite";
-      popup.innerHTML = message;
-      document.body.appendChild(popup);
-      setTimeout(() => popup.remove(), 8000);
-    }
-
-    function generateLovePopupsInfinite() {
-      setInterval(() => {
-        const msg = loveMessages[Math.floor(Math.random() * loveMessages.length)];
-        createLovePopup(msg);
-      }, 100);
-    }
-
-    function startStarfallAndPopups() {
-      createStars(150);
-      createHearts(80);
-      generateLovePopupsInfinite();
-      function animate() {
-        drawScene();
-        requestAnimationFrame(animate);
-      }
-      animate();
-    }
-
-    window.addEventListener("resize", () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
-
-    window.addEventListener("DOMContentLoaded", () => {
-      music.muted = false;
-      music.play().catch(() => {});
-    });
-  </script>
+initDronesForText();
+animateTextPhase();
+</script>
 </body>
 </html>
