@@ -86,15 +86,18 @@ class Drone {
   }
 }
 
-function getTextPositions(text, fontSize = canvas.width < 500 ? 40 : 60) {
+function getTextPositions(text, fontSize = canvas.width < 500 ? 60 : 100) {
   const offCanvas = document.createElement("canvas");
   const offCtx = offCanvas.getContext("2d");
   offCanvas.width = canvas.width;
   offCanvas.height = canvas.height;
+
   offCtx.fillStyle = "#ff6699";
-  offCtx.font = `bold ${fontSize}px Arial`;
+  offCtx.font = `bold ${fontSize}px 'Segoe UI', 'Arial Black', sans-serif`;
   offCtx.textAlign = "center";
+  offCtx.textBaseline = "middle";
   offCtx.fillText(text, canvas.width / 2, canvas.height / 2);
+
   const imageData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
   const positions = [];
 
@@ -106,6 +109,7 @@ function getTextPositions(text, fontSize = canvas.width < 500 ? 40 : 60) {
       }
     }
   }
+
   return positions;
 }
 
@@ -172,6 +176,7 @@ function startHeartEffect() {
     }
     requestAnimationFrame(drawHeartParticles);
   }
+
   drawHeartParticles();
 }
 
